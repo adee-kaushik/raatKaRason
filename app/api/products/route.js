@@ -1,6 +1,2 @@
-import {database} from '../../../lib/database';
-import {products} from '../../../lib/catalog';
-export async function GET(){
- if(!process.env.DATABASE_URL)return Response.json({products,preview:true});
- try{const sql=database();const rows=await sql`SELECT id,name,brand,category,size,price,stock,tag,image FROM products WHERE active = true ORDER BY name`;return Response.json({products:rows,preview:false},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'The catalogue is temporarily unavailable.'},{status:503});}
-}
+import {database} from '../../../lib/database';import {products} from '../../../lib/catalog';import {defaultSettings} from '../../../lib/store';import {json} from '../../../lib/http';
+export async function GET(){if(!process.env.DATABASE_URL)return json({products:products.map(p=>({...p,image:`/products/${p.id}.svg`})),settings:defaultSettings,preview:true});try{const sql=database();const [rows,settings]=await sql.transaction([sql`SELECT id,name,brand,category,size,price,stock,tag,image,description,mrp FROM products WHERE active=true ORDER BY sort_order,name`,sql`SELECT data FROM store_settings WHERE id=1`],{readOnly:true,isolationLevel:'RepeatableRead'});if(!settings[0])throw new Error();return json({products:rows,settings:{...defaultSettings,...settings[0].data},preview:false});}catch{return json({error:'The store is temporarily unavailable. Please try again shortly.'},503);}}

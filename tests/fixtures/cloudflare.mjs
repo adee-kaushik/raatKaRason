@@ -1,0 +1,1 @@
+const files=new Map();export const env={BUCKET:{async put(key,bytes,{httpMetadata}){files.set(key,{bytes,httpMetadata});},async get(key){const f=files.get(key);return f?{body:f.bytes,httpMetadata:f.httpMetadata}:null;}}};
