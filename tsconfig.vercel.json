@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "app/**/*.js",
+    "app/**/*.jsx",
+    "lib/database.js",
+    "lib/store.js",
+    "lib/http.js",
+    "lib/admin-auth.js",
+    "lib/image-storage.js",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "worker",
+    "scripts",
+    "examples",
+    "dist",
+    ".sites-runtime",
+    "vite.config.ts"
+  ]
+}

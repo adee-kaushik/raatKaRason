@@ -46,3 +46,7 @@ yarn-error.log*
 
 # Share variable names without credentials.
 !.env.example
+
+# Provider-local credentials and output
+.vercel/
+.neon

@@ -1,5 +1,5 @@
 # Raat Ka Rason
-Mobile-first midnight snack store for hostel students. JavaScript, React, Next.js APIs, Tailwind CSS and Neon PostgreSQL. The hosted Sites runtime uses Vinext and Cloudflare Workers; image uploads use its private R2 binding.
+Mobile-first midnight snack store for hostel students. JavaScript, React, Next.js APIs, Tailwind CSS and Neon PostgreSQL. The hosted Sites runtime uses Vinext and Cloudflare Workers; product images use private Neon Object Storage through a server-side S3 adapter. The same application also builds natively for Vercel with `pnpm build:vercel`.
 
 ## Customer experience
 - Guest browsing and checkout; no customer accounts.
@@ -18,6 +18,9 @@ The mobile-first dashboard supports:
 - Orders, customer contact/delivery details, fulfilment states, cancellation with automatic restocking, and delivered revenue.
 - Store open/closed switch, displayed hours, supported hostels, delivery fee and minimum order.
 - Homepage copy, announcement, branding, category list, footer and support phone.
+
+## Live infrastructure
+Neon project: `wild-unit-54915958` in Singapore. Production branch: `br-aged-waterfall-azczqkah`; isolated checkout test branch: `br-restless-math-az9xnsg4`. Database: `raatkarason`. Product-image bucket: `product-images`. All credentials stay in hosting secrets.
 
 ## Neon setup
 1. Create a dedicated Neon project and a temporary development branch. Select a region near your users.
@@ -40,3 +43,6 @@ Without a database connection, the site shows a clearly marked sample catalogue 
 - `pnpm build`
 
 The application uses `.jsx` and `.js`. Supplied hosting/build infrastructure retains its original TypeScript files. Do not remove the Sites build integration when deploying to this host.
+
+## Vercel
+Import the connected GitHub repository. The tracked `vercel.json` selects Next.js, the production build command and Singapore region. Configure the variables listed in `.env.example` as server-only production secrets. `DATABASE_URL_UNPOOLED` is needed only when applying the schema, not for runtime.

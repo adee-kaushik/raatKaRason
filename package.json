@@ -13,13 +13,18 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
-    "db:setup": "node scripts/setup-neon.mjs"
+    "db:setup": "node scripts/setup-neon.mjs",
+    "build:vercel": "next build --webpack",
+    "dev:next": "next dev",
+    "start:next": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
     "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.7.1",
     "@neondatabase/serverless": "1.0.2",
     "@shadcn/react": "^0.3.0",
+    "@smithy/fetch-http-handler": "^5.8.0",
     "bcryptjs": "3.0.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
