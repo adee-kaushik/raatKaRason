@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS orders(
  id uuid PRIMARY KEY,request_key uuid NOT NULL UNIQUE,lookup_token text NOT NULL UNIQUE,request_payload jsonb NOT NULL,
  customer_name text NOT NULL,phone text NOT NULL,hostel text NOT NULL,room text NOT NULL,notes text NOT NULL DEFAULT '',
  subtotal integer NOT NULL CHECK(subtotal >= 0),delivery_fee integer NOT NULL CHECK(delivery_fee >= 0),total integer NOT NULL CHECK(total >= 0),
- payment_method text NOT NULL DEFAULT 'cod' CHECK(payment_method='cod'),
+ payment_method text NOT NULL DEFAULT 'prepaid' CHECK(payment_method IN ('prepaid','cod')),
  status text NOT NULL DEFAULT 'pending' CHECK(status IN('pending','accepted','packing','out_for_delivery','delivered','cancelled')),
  payment_status text NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN('unpaid','paid')),
  created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now()

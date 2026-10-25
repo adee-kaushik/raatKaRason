@@ -6,7 +6,7 @@ Mobile-first midnight snack store for hostel students. JavaScript, React, Next.j
 - Search, categories, sorting, photos, prices, MRP, descriptions and exact remaining stock.
 - Stock refreshes every 10 seconds while the page is visible and when the tab returns to focus.
 - Persistent device-local bag. Server checks current prices, fees and stock at order placement.
-- Cash on delivery, supported-hostel selector, room number and delivery notes.
+- Prepaid (UPI QR on WhatsApp), supported-hostel selector, room number and delivery notes.
 - Order confirmation and live status, available under My orders on the same device.
 
 ## Admin
@@ -33,7 +33,7 @@ Neon project: `wild-unit-54915958` in Singapore. Production branch: `br-aged-wat
 `db/store-schema.sql` is idempotent. SQL functions atomically create orders, validate prices, lock stock rows, enforce per-phone order limits and restore cancelled stock exactly once. Idempotency keys prevent duplicate orders from request retries. Inventory writes use row versions to prevent an admin edit overwriting a concurrent purchase.
 
 ## Important operating details
-Opening hours are display text; availability is controlled by the admin switch. Online card/UPI payments are not integrated. Delivered COD orders record cash collected. Guest order tokens are private bearer references stored only on the shopper’s device; the public status endpoint omits customer names, phones and addresses.
+Opening hours are display text; availability is controlled by the admin switch. Orders are prepaid: the store owner sends their UPI QR code directly on WhatsApp after the customer places the order. Guest order tokens are private bearer references stored only on the shopper’s device; the public status endpoint omits customer names, phones and addresses.
 
 Without a database connection, the site shows a clearly marked sample catalogue and blocks checkout and admin login. With a connection, it shows actual inventory only; database failures never silently become sample inventory.
 

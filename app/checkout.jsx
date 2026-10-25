@@ -19,7 +19,7 @@ export function getOwnerWhatsAppUrl(order, customer, items, ownerPhone = '999630
   ...(items || []).map(i => `• ${i.quantity}x ${i.name || i.id} (₹${(i.price || i.unit_price || 0) * i.quantity})`),
   `----------------------------------`,
   order?.total ? `💰 *Total Amount:* ₹${order.total}` : '',
-  `💳 *Payment Method:* UPI QR Code (Owner sends QR to customer)`,
+  `💳 *Payment Method:* Prepaid (Owner sends UPI QR on WhatsApp)`,
   `📲 *Customer Request:* Please send your payment QR code on WhatsApp so I can complete payment! 🙏`
  ].filter(Boolean).join('\n');
  return `https://wa.me/91${ownerPhone}?text=${encodeURIComponent(lines)}`;
@@ -72,12 +72,12 @@ export function Checkout({lines,cart,settings,subtotal,isPreview,onSuccess,onBus
   </div>
   <Field label="Delivery note (optional)"><textarea name="notes" rows={2} maxLength={500} placeholder="Anything we should know?"/></Field>
   <p className="checkout-note">{settings.delivery_note}</p>
-  <div className="checkout-payment upi-payment"><QrCode size={24}/><div><b>UPI / Online Payment (No COD)</b><p>Store owner will send their UPI QR code directly on WhatsApp after you place the order.</p></div></div>
+  <div className="checkout-payment upi-payment"><QrCode size={24}/><div><b>Prepaid (UPI QR)</b><p>Store owner will send their UPI QR code directly on WhatsApp after you place the order.</p></div></div>
   <div className="checkout-fee"><span>Delivery fee</span><b>{money(settings.delivery_fee)}</b></div>
   <div className="cart-total"><span>Total to pay</span><b>{money(subtotal+settings.delivery_fee)}</b></div>
   {blocked&&<p className="form-notice">{isPreview?'This preview cannot accept orders.':!settings.is_open?settings.closed_message:!settings.hostels.length?'Delivery hostels are being configured.':`Minimum order is ${money(settings.minimum_order)}.`}</p>}
   {error&&<p className="form-error" role="alert">{error}</p>}
-  <button className="primary full" disabled={busy||blocked}>{busy?'Placing your order…':`Place order · ${money(subtotal+settings.delivery_fee)}`}<ArrowRight size={16}/></button>
+  <button className="primary full" disabled={busy||blocked}>{busy?'Placing your order…':`Place prepaid order · ${money(subtotal+settings.delivery_fee)}`}<ArrowRight size={16}/></button>
   <button type="button" className="secondary full" disabled={busy} onClick={onBack}>Back to my bag</button>
  </form>;
 }
@@ -109,12 +109,12 @@ export function OrderStatus({token,lastOrder,settings,onClose}){
  return <div className="order-success">
   <CheckCircle size={44}/>
   <h3>{order?statusLabels[order.status]:'Order placed successfully!'}</h3>
-  <p>Thanks for choosing Raat Ka Rason. Your order has been placed.</p>
+  <p>Thanks for choosing Raat Ka Rason. Your prepaid order has been placed.</p>
 
   <div className="owner-popup-card">
-   <div className="owner-popup-badge"><QrCode size={14}/> UPI PAYMENT VIA WHATSAPP</div>
-   <h4>Owner will send UPI QR code to your WhatsApp</h4>
-   <p>We do not take Cash on Delivery. Store owner ({ownerPhone}) will send the QR code to your WhatsApp number for payment.</p>
+   <div className="owner-popup-badge"><QrCode size={14}/> PREPAID · UPI VIA WHATSAPP</div>
+   <h4>Prepaid Order · Owner will send UPI QR to WhatsApp</h4>
+   <p>This is a prepaid order. Store owner ({ownerPhone}) will send the UPI QR code to your WhatsApp number for payment.</p>
    <div className="owner-phone-number">{ownerPhone}</div>
    <div className="owner-popup-actions">
     <a href={waUrl} target="_blank" rel="noreferrer" className="owner-whatsapp-btn">
@@ -129,7 +129,7 @@ export function OrderStatus({token,lastOrder,settings,onClose}){
   {error&&<p className="form-error" role="alert">{error}</p>}
   {effectiveOrder&&<>
    <div className="order-reference">#{effectiveOrder.id?.slice(0,8).toUpperCase()}</div>
-   <p>{effectiveOrder.status==='cancelled'?'This order was cancelled. Its items were returned to stock.':effectiveOrder.status==='delivered'?`Delivered · ${money(effectiveOrder.total)} paid via UPI QR`:`Total: ${money(effectiveOrder.total)} · Owner will send payment QR on WhatsApp.`}</p>
+   <p>{effectiveOrder.status==='cancelled'?'This order was cancelled. Its items were returned to stock.':effectiveOrder.status==='delivered'?`Delivered · ${money(effectiveOrder.total)} prepaid via UPI QR`:`Total: ${money(effectiveOrder.total)} (Prepaid) · Owner will send payment QR on WhatsApp.`}</p>
    {effectiveOrder.status!=='cancelled'&&<div className="order-progress">{steps.map((s,i)=><div className={`order-step ${i<=stage?'done':''}`} key={s}><span>{i<=stage?'✓':i+1}</span>{statusLabels[s]}</div>)}</div>}
    {effectiveOrder.items?.map((i,k)=><p key={k}>{i.quantity} × {i.name} · {money((i.price||i.unit_price||0)*i.quantity)}</p>)}
   </>}
