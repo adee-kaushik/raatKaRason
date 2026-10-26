@@ -18,3 +18,35 @@ test('order tracking returns only the token holder’s order without customer PI
 test('administrator sees delivery details and can cancel with restock',async()=>{const list=await result('admin/orders','GET',req('/api/admin/orders'));assert.equal(list.data.orders[0].phone,'9876543210');assert.equal(list.data.stats.active_orders,1);const r=await result('admin/orders','PATCH',req('/api/admin/orders','PATCH',{id:order.id,status:'cancelled'}));assert.equal(r.status,200);assert.equal((await db.query('SELECT stock FROM products')).rows[0].stock,3);});
 test('media rejects unsafe image formats and unauthenticated access',async()=>{const form=new FormData();form.set('image',new File(['<svg/>'],'unsafe.svg',{type:'image/svg+xml'}));const request=new Request('https://test.local/api/admin/media',{method:'POST',headers:{origin:'https://test.local','content-length':'200'},body:form});assert.equal((await routes['admin/media'].POST(request)).status,400);});
 test('sign-out revokes the session at the database',async()=>{const r=await result('admin/logout','POST',req('/api/admin/logout','POST',{}));assert.equal(r.status,200);assert.equal((await result('admin/products','GET',req('/api/admin/products'))).status,401);});
+
+test('read-only account can sign in and inspect every admin resource',async()=>{
+ await db.query('INSERT INTO admin_accounts(email,password_hash) VALUES($1,$2)',['viewer@example.test',await hash('viewer-test-password',4)]);
+ const bad=await result('admin/login','POST',req('/api/admin/login','POST',{email:'viewer@example.test',password:'wrong'}));assert.equal(bad.status,401);
+ const login=await result('admin/login','POST',req('/api/admin/login','POST',{email:' VIEWER@EXAMPLE.TEST ',password:'viewer-test-password',role:'admin'}));assert.equal(login.status,200);
+ globalThis.__testCookies.rkr_admin=login.headers.get('set-cookie').match(/rkr_admin=([a-f0-9]+)/)[1];
+ const session=await import('../app/api/admin/session/route.js');const response=await session.GET();assert.deepEqual((await response.json()).admin,{email:'viewer@example.test',role:'read_only'});
+ for(const path of ['products','orders','settings'])assert.equal((await result('admin/'+path,'GET',req('/api/admin/'+path))).status,200);
+});
+test('read-only account cannot write inventory, orders, settings or upload images even with a forged role',async()=>{
+ const before=await db.query('SELECT row_to_json(p) AS data FROM products p');const orders=await db.query('SELECT row_to_json(o) AS data FROM orders o');const settings=await db.query('SELECT row_to_json(s) AS data FROM store_settings s');
+ for(const [path,method] of [['products','POST'],['products','PUT'],['products','PATCH'],['orders','PATCH'],['settings','PUT'],['media','POST']]){
+  const denied=await result('admin/'+path,method,req('/api/admin/'+path,method,{...product,role:'admin',id:order.id,status:'delivered',action:'restock',quantity:500},{'x-admin-role':'admin'}));assert.equal(denied.status,403,method+' '+path);
+ }
+ assert.deepEqual((await db.query('SELECT row_to_json(p) AS data FROM products p')).rows,before.rows);
+ assert.deepEqual((await db.query('SELECT row_to_json(o) AS data FROM orders o')).rows,orders.rows);
+ assert.deepEqual((await db.query('SELECT row_to_json(s) AS data FROM store_settings s')).rows,settings.rows);
+});
+test('disabled read-only accounts lose existing sessions and cannot log in',async()=>{
+ await db.query('UPDATE admin_accounts SET active=false WHERE email=$1',['viewer@example.test']);
+ assert.equal((await result('admin/products','GET',req('/api/admin/products'))).status,401);
+ assert.equal((await result('admin/login','POST',req('/api/admin/login','POST',{email:'viewer@example.test',password:'viewer-test-password'}))).status,401);
+});
+test('password rotation revokes viewer sessions and the bcrypt hash is never a usable password',async()=>{
+ await db.query('UPDATE admin_accounts SET active=true,credentials_updated_at=now() WHERE email=$1',['viewer@example.test']);
+ assert.equal((await result('admin/products','GET',req('/api/admin/products'))).status,401);
+ assert.equal((await result('admin/login','POST',req('/api/admin/login','POST',{email:'admin@example.test',password:process.env.ADMIN_PASSWORD_HASH}))).status,401);
+ const login=await result('admin/login','POST',req('/api/admin/login','POST',{email:'admin@example.test',password:'test-only-password'}));assert.equal(login.status,200);
+ globalThis.__testCookies.rkr_admin=login.headers.get('set-cookie').match(/rkr_admin=([a-f0-9]+)/)[1];
+ const response=await (await import('../app/api/admin/session/route.js')).GET();assert.equal((await response.json()).admin.role,'admin');
+ assert.equal((await result('admin/products','PATCH',req('/api/admin/products','PATCH',{}))).status,400);
+});

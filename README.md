@@ -46,3 +46,6 @@ The application uses `.jsx` and `.js`. Supplied hosting/build infrastructure ret
 
 ## Vercel
 Import the connected GitHub repository. The tracked `vercel.json` selects Next.js, the production build command and Singapore region. Configure the variables listed in `.env.example` as server-only production secrets. `DATABASE_URL_UNPOOLED` is needed only when applying the schema, not for runtime.
+
+### Read-only dashboard accounts
+Additional accounts are stored in the private `admin_accounts` table with bcrypt password hashes, never in source. Apply `db/migrations/001-read-only-admin.sql` to an existing database before deploying this update (`db:setup` includes it for new installations). Only the environment-configured primary admin has write access. Read-only accounts can inspect every dashboard tab; inventory, order, settings and media writes return 403. Disabling an account or updating its hash and `credentials_updated_at` invalidates its existing sessions.
